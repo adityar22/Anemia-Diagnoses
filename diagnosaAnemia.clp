@@ -1,13 +1,40 @@
 (defglobal
     ?*anemia* = 0
+    ?*kronis* = yes
 )
 
 (defrule intro
     =>
     (printout t crlf "Do you want check you blood pressure? (y/n)" crlf)
     (bind ?answer (read))
-    (if(eq ?answer y) then (assert(do_blood_check)))
-    (if(eq ?answer n) then (printout t "Thank you, stay healthy") crlf)
+    (if(eq ?answer y) 
+        then 
+            (assert(do_blood_check))
+        else
+            (if(eq ?answer n) 
+                then 
+                    (printout t "Thank you, stay healthy"crlf) 
+            )
+        else
+            (assert(returnAsk))
+    )
+)
+(defrule returnIntro
+    (returnAsk)
+    =>
+    (printout t crlf "Do you want check you blood pressure? (y/n)" crlf)
+    (bind ?answer (read))
+    (if(eq ?answer y) 
+        then 
+            (assert(do_blood_check))
+        else
+            (if(eq ?answer n) 
+                then 
+                    (printout t "Thank you, stay healthy"crlf) 
+            )
+        else
+            (assert(returnAsk))
+    )
 )
 (defrule gender
     (do_blood_check)
@@ -18,12 +45,31 @@
         then
             (assert(man))
         else
-            (assert(woman))
+            (if(eq ?answer n)
+                then
+                    (assert(woman))
+            )
+        else 
+            (assert(do_blood_check))
+    )
+)
+(defrule askChronic
+    (or(man) (woman))
+    =>
+    (printout t crlf "Do you have chronic diseases?y/n" crlf)
+    (bind ?answer (read))
+    (if(eq ?answer y)
+        then
+            (printout t "What your chronic disease?" crlf)
+            (bind ?*kronis* (read))
+            (assert(have_chronic))
+        else
+            (assert(dont_have_chronic))
     )
 )
 ;/////////////////////Phase 1/////////////////////////////
 (defrule tired
-    (or(man) (woman))
+    (or(have_chronic) (dont_have_chronic))
     =>
     (printout t crlf "Do you feel tired often? (y/n)" crlf)
     (bind ?answer (read))
@@ -159,6 +205,22 @@
             (assert(not_pregnant))
     )
 )
+(defrule chronicheal
+    (phase2)
+    (have_chronic)
+    =>
+    (printout t crlf "Is the your " ?*kronis* "diseases cured?y/n" crlf)
+    (bind ?answer (read))
+    (if(eq ?answer y)
+        then
+            (assert(has_healed))
+            (assert(phase2))
+        else
+            (printout t "You may get anemia due to the effects of body strees when suffering from the "?*kronis*" disease " crlf) 
+            (assert(not_healed))
+            (assert(phase2))
+    )
+)
 (defrule iron 
     (phase2)
     =>
@@ -168,19 +230,37 @@
         then 
             (printout t "You may diagnosed with anemia because you rarely consume foods with iron content" crlf)
             (assert(rarely_consume_iron)) 
-            (bind ?*anemia* (+ ?*anemia* 1))
+             (assert(diagnose))
         else
             (assert (consume_iron))
+            (assert(diagnose))
     )
 )
-
 ;/////////////////////Diagnose Anemia/////////////////////////////
-
+(defrule finalDiagnose
+    (diagnose)
+    =>
+    
+)
 ;/////////////////////Diagnose Other/////////////////////////////
+(defrule other0
+    (check_other)
+    (or(feel_tired) (feel_dizzy))
+    =>
+    (printout t crlf "Do you rarely consume mineral water?? (y/n)" crlf)
+    (bind ?answer (read))
+    (if(eq ?answer y) 
+        then 
+            (printout t crlf "You may not have anemia but you got dehidrated" crlf)
+            (printout t "Consume more mineral water so that it is not easily tired and dizzy" crlf)
+        else
+            (assert(check_other))
+    )
+)
 (defrule other 
     (check_other)(inflammation)
     =>
-    (printout t crlf "Does your throat hurt and cough frequently?? (y/n)" crlf)
+    (printout t crlf "Does your throat hurt and cough frequently? (y/n)" crlf)
     (bind ?answer (read))
     (if(eq ?answer y) 
         then 
@@ -216,7 +296,7 @@
 (defrule other4
     (check_other)(reduced_immune)
     =>
-    (printout t crlf "Do you have chronic diseases?y/n" crlf)
+    (printout t crlf "Are you susceptible to disease or virus?y/n" crlf)
     (bind ?answer (read))
     (if (eq ?answer y)
         then
