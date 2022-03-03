@@ -1,9 +1,14 @@
 (defglobal
     ?*anemia* = 0
     ?*kronis* = yes
+    ?*bpressure* = 100
 )
-
+(defrule trigger
+    =>
+    (assert(callAsk))
+)
 (defrule intro
+    (callAsk)
     =>
     (printout t crlf "Do you want check you blood pressure? (y/n)" crlf)
     (bind ?answer (read))
@@ -16,26 +21,14 @@
                     (printout t "Thank you, stay healthy"crlf) 
             )
         else
-            (assert(returnAsk))
-    )
-)
-(defrule returnIntro
-    (returnAsk)
-    =>
-    (printout t crlf "Do you want check you blood pressure? (y/n)" crlf)
-    (bind ?answer (read))
-    (if(eq ?answer y) 
-        then 
-            (assert(do_blood_check))
-        else
-            (if(eq ?answer n) 
-                then 
-                    (printout t "Thank you, stay healthy"crlf) 
+            (if (and (neq ?answer y) (neq ?answer n))
+                then
+                    (printout t "Input not valid" crlf)
+                    (assert(callAsk))
             )
-        else
-            (assert(returnAsk))
     )
 )
+;/////////////////////user Data/////////////////////////////
 (defrule gender
     (do_blood_check)
     =>
@@ -51,6 +44,27 @@
             )
         else 
             (assert(do_blood_check))
+    )
+)
+(defrule pressure
+    (or (man) (woman))
+    =>
+    (printout t crlf "Do you know your blood pressure?y/n" crlf)
+    (bind ?answer (read))
+    (if(eq ?answer y) 
+        then 
+            (printout t crlf "How much is your blood pressure? (just input number)"
+            (bind ?*bpressure* (read))
+            (if(< ?*bpressure* 90) 
+                then
+                    (assert(low_blood_pressure))
+            )
+            (assert(know_blood_pressure))
+        else
+            (if(eq ?answer n) 
+                then 
+                    (assert(dont_know_blood_pressure)) 
+            )
     )
 )
 (defrule askChronic
@@ -186,8 +200,10 @@
     (if(> ?*anemia* 5) 
         then
             (assert(phase2))
+        else 
+            (if (< ?*bpressure* 90) then (assert(check_bp)))
         else
-            (assert (check_other))
+            (if (>= ?*bpressure* 90) then (assert (check_other)))
     )
 )
 ;/////////////////////Phase 2/////////////////////////////
@@ -237,11 +253,7 @@
     )
 )
 ;/////////////////////Diagnose Anemia/////////////////////////////
-(defrule finalDiagnose
-    (diagnose)
-    =>
-    
-)
+
 ;/////////////////////Diagnose Other/////////////////////////////
 (defrule other0
     (check_other)
@@ -257,7 +269,7 @@
             (assert(check_other))
     )
 )
-(defrule other 
+(defrule other2 
     (check_other)(inflammation)
     =>
     (printout t crlf "Does your throat hurt and cough frequently? (y/n)" crlf)
@@ -269,7 +281,7 @@
             (assert(check_other))
     )
 )
-(defrule other2 
+(defrule other3 
     (check_other)(have_short_breath)
     =>
     (printout t crlf "Does your throat hurt and cough frequently?? (y/n)" crlf)
@@ -281,7 +293,7 @@
             (assert(check_other))
     )
 )
-(defrule other3 
+(defrule other4 
     (check_other)(fast_heartbeat)
     =>
     (printout t crlf "Does your chest or heart feel pain frequently?? (y/n)" crlf)
@@ -293,7 +305,7 @@
             (assert(check_other))
     )
 )
-(defrule other4
+(defrule other5
     (check_other)(reduced_immune)
     =>
     (printout t crlf "Are you susceptible to disease or virus?y/n" crlf)
@@ -305,7 +317,7 @@
             (assert(check_other))
     )
 )
-(defrule other5
+(defrule other6
     (check_other)(feel_cold)
     =>
     (printout t crlf "Do you often shiver??y/n" crlf)
@@ -313,6 +325,25 @@
     (if (eq ?answer y)
         then
             (printout t "You may get a cold." crlf)
+        else
+            (assert(check_other))
+    )
+)
+(defrule other1
+    (check_other)(look_pale)
+    (not (feel_dizzy) (have_short_breath) (feel_tired) (fast_heartbeat) (have_inflammation) (reduced_immune) (feel_cold))
+    =>
+    (printout t crlf "You may not got anemia or other symptomps, but yo look pale just because ecologis factoror because your bad habit" crlf)
+)
+;/////////////////////Check BP/////////////////////////////
+(defrule bp1
+    (check_bp)
+    =>
+    (printout t crlf "Do you feel tired often?y/n" crlf)
+    (bind ?answer (read))
+    (if (eq ?answer y)
+        then
+            (printout t "You may not anemia, but got low pressure blood" crlf)
         else
             (assert(check_other))
     )
