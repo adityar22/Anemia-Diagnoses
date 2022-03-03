@@ -10,7 +10,7 @@
 (defrule intro
     (callAsk)
     =>
-    (printout t crlf "Do you want check you blood pressure? (y/n)" crlf)
+    (printout t crlf "Do you want check you blood problem? (y/n)" crlf)
     (bind ?answer (read))
     (if(eq ?answer y) 
         then 
@@ -38,12 +38,10 @@
         then
             (assert(man))
         else
-            (if(eq ?answer n)
+            (if(eq ?answer w)
                 then
                     (assert(woman))
             )
-        else 
-            (assert(do_blood_check))
     )
 )
 (defrule pressure
@@ -53,7 +51,7 @@
     (bind ?answer (read))
     (if(eq ?answer y) 
         then 
-            (printout t crlf "How much is your blood pressure? (just input number)"
+            (printout t crlf "How much is your blood pressure? (just input number)" crlf)
             (bind ?*bpressure* (read))
             (if(< ?*bpressure* 90) 
                 then
@@ -68,7 +66,7 @@
     )
 )
 (defrule askChronic
-    (or(man) (woman))
+    (or(know_blood_pressure) (dont_know_blood_pressure))
     =>
     (printout t crlf "Do you have chronic diseases?y/n" crlf)
     (bind ?answer (read))
@@ -265,8 +263,11 @@
         then 
             (printout t crlf "You may not have anemia but you got dehidrated" crlf)
             (printout t "Consume more mineral water so that it is not easily tired and dizzy" crlf)
-        else
-            (assert(check_other))
+        else 
+            (if(eq ?answer n) 
+                then 
+                (assert(check_other))
+            )
     )
 )
 (defrule other2 
@@ -331,9 +332,16 @@
 )
 (defrule other1
     (check_other)(look_pale)
-    (not (feel_dizzy) (have_short_breath) (feel_tired) (fast_heartbeat) (have_inflammation) (reduced_immune) (feel_cold))
+    (not_dizzy) (isnt_have_short_breath) (isnt_tired) (isnt_have_short_breath) (dont_have_inflammation) (normal_immune) (isnt_cold)
     =>
     (printout t crlf "You may not got anemia or other symptomps, but yo look pale just because ecologis factoror because your bad habit" crlf)
+)
+(defrule other7
+    (check_other)
+    (isnt_have_short_breath) (isnt_have_short_breath) (dont_have_inflammation) (normal_immune) (isnt_cold)
+    (or(isnt_tired) (not_pale) (not_dizzy))
+    =>
+    (printout t crlf "Your diseases not yet detected, pleas come to docter" crlf) 
 )
 ;/////////////////////Check BP/////////////////////////////
 (defrule bp1
